@@ -5,7 +5,7 @@ const { default: mongoose } = require('mongoose');
 const app=express();
 
 app.get("/balance",authMiddleware, async (req,res)=>{
-    const account=await Account.findOne({uerId:req.userId})
+    const account=await Account.findOne({userId:req.userId})
     res.json({
         balance:account.balance
     })
@@ -16,9 +16,9 @@ app.post("/transfer",authMiddleware,async (req,res)=>{
     const session = await mongoose.startSession()
     session.startTransaction();
    try{
-    const post = await Account.findById({toId}).session(session)
+    const post = await Account.find({userId:toId}).session(session)
     const self = await Account.find({userId:req.userId}).session(session)
-    if(req.body.amount>self.balanse){
+    if(req.body.amount>self.balance){
         res.status(400).json({
             message: "Insufficient balance"
         })
@@ -29,7 +29,7 @@ app.post("/transfer",authMiddleware,async (req,res)=>{
     })
    }
     
-    await Account.findByIdAndDelete({toId},{
+    await Account.updateOne({userId:toId},{
         $inc:{balance:req.body.amount}
     }).session(session)
     await Account.updateOne({userId:req.userId},{
